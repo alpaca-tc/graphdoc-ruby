@@ -7,21 +7,18 @@ module GraphdocRuby
       @application.call(env)
     end
 
-    def initialize(
-      output_directory: GraphdocRuby.config.output_directory,
-      executable_path: GraphdocRuby.config.executable_path,
-      endpoint: GraphdocRuby.config.endpoint,
-      overwrite: GraphdocRuby.config.overwrite,
-      mtime: GraphdocRuby.config.mtime
-    )
+    def self.graphdoc
       GraphdocRuby::Graphdoc.new(
-        output: output_directory,
-        executable: executable_path,
-        endpoint: endpoint,
-        overwrite: overwrite,
-        mtime: mtime
-      ).generate_document!
+        output: GraphdocRuby.config.output_directory,
+        executable: GraphdocRuby.config.executable_path,
+        endpoint: GraphdocRuby.config.endpoint,
+        overwrite: GraphdocRuby.config.overwrite,
+        mtime: GraphdocRuby.config.mtime
+      )
+    end
 
+    def initialize
+      self.class.graphdoc.generate_document! unless GraphdocRuby.config.precompile
       @static = GraphdocRuby::Static.new(GraphdocRuby.config.output_directory)
     end
 

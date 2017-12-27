@@ -18,10 +18,6 @@ module GraphdocRuby
       @options += ['--force'] if overwrite
     end
 
-    def generated?
-      File.exist?(@output_html) && (!@overwrite || (@overwrite && regenerated?))
-    end
-
     def generate_document!
       Semaphore.synchronize do
         return if generated?
@@ -32,6 +28,10 @@ module GraphdocRuby
     end
 
     private
+
+    def generated?
+      File.exist?(@output_html) && (!@overwrite || (@overwrite && regenerated?))
+    end
 
     def regenerated?
       File::Stat.new(@output_html).mtime >= @mtime
