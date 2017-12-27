@@ -3,11 +3,7 @@
 require 'open3'
 module GraphdocRuby
   class Graphdoc
-    Semaphore = Mutex.new
-
     def initialize(output:, endpoint:, overwrite:, executable:, mtime:)
-      raise ArgumentError, 'endpoint is not found. Missing GraphdocRuby.config.endpoint = "https://your-graphql-service.com/graphql"' unless endpoint
-
       @endpoint = endpoint
       @executable = executable
       @overwrite = overwrite
@@ -19,18 +15,16 @@ module GraphdocRuby
     end
 
     def generate_document!
-      Semaphore.synchronize do
-        return if generated?
+      return if generated?
 
-        message, status = Open3.capture2e(*command)
-        raise "Command failed. (#{command}) '#{message}'" unless status.success?
-      end
+      message, status = Open3.capture2e(*command)
+      raise "Command failed. (#{command}) '#{message}'" unless status.success?
     end
 
     private
 
     def generated?
-      File.exist?(@output_html) && (!@overwrite || (@overwrite && regenerated?))
+      GraphdocRuby::Utils.file_exist?(@output_html) && (!@overwrite || (@overwrite && regenerated?))
     end
 
     def regenerated?
@@ -40,15 +34,13 @@ module GraphdocRuby
     end
 
     def command
-      if File.exist?(@endpoint)
-        [executable, '--schema-file', @endpoint, *@options]
+      if GraphdocRuby::Utils.valid_url?(@endpoint)
+        [@executable, '--endpoint', @endpoint, *@options]
+      elsif GraphdocRuby::Utils.file_exist?(@endpoint)
+        [@executable, '--schema-file', @endpoint, *@options]
       else
-        [executable, '--endpoint', @endpoint, *@options]
+        raise "Invalid endpoint given. endpoint(#{@endpoint}) must be valid URL or existing schema file"
       end
-    end
-
-    def executable
-      @executable || raise('command not found: graphdoc. Please install graphdoc (npm install -g @2fd/graphdoc)')
     end
   end
 end

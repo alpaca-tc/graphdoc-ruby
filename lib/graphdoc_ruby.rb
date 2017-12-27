@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require 'rack'
+require 'graphdoc-ruby/utils'
 require 'graphdoc-ruby/graphdoc'
 require 'graphdoc-ruby/static'
 require 'graphdoc-ruby/application'
 require 'graphdoc-ruby/config'
+require 'graphdoc-ruby/graphql_json'
 require 'graphdoc-ruby/version'
 
 module GraphdocRuby
@@ -16,3 +18,5 @@ module GraphdocRuby
     yield(config)
   end
 end
+
+require 'graphdoc-ruby/railtie' if defined?(Rails)

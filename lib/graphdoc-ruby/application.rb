@@ -4,23 +4,29 @@ require 'rack/response'
 
 module GraphdocRuby
   class Application
+    Semaphore = Mutex.new
+
     def self.call(env)
       @application ||= new
       @application.call(env)
     end
 
     def self.graphdoc
+      config = GraphdocRuby.config
+      config.assert_configuration!
+
       GraphdocRuby::Graphdoc.new(
-        output: GraphdocRuby.config.output_directory,
-        executable: GraphdocRuby.config.executable_path,
-        endpoint: GraphdocRuby.config.endpoint,
-        overwrite: GraphdocRuby.config.overwrite,
-        mtime: GraphdocRuby.config.mtime
+        output: config.output_directory,
+        executable: config.executable_path,
+        endpoint: config.endpoint,
+        overwrite: config.overwrite,
+        mtime: config.mtime
       )
     end
 
     def initialize
-      self.class.graphdoc.generate_document! unless GraphdocRuby.config.precompile
+      generate_html if GraphdocRuby.config.run_time_generation
+
       @static = GraphdocRuby::Static.new(GraphdocRuby.config.output_directory)
     end
 
@@ -30,8 +36,26 @@ module GraphdocRuby
 
     private
 
+    def generate_html
+      Semaphore.synchronize do
+        if should_generate_schema_json?
+          GraphdocRuby::GraphqlJson.write_schema_json
+        end
+
+        self.class.graphdoc.generate_document!
+      end
+    end
+
+    def should_generate_schema_json?
+      !GraphdocRuby::Utils.valid_url?(GraphdocRuby.config.endpoint) && !GraphdocRuby::Utils.file_exist?(GraphdocRuby.config.endpoint)
+    end
+
     def not_found
-      [404, { 'Content-Type' => 'text/html' }, ['Not found']]
+      if GraphdocRuby.config.run_time_generation
+        [404, { 'Content-Type' => 'text/html' }, ['Not found generated html']]
+      else
+        [404, { 'Content-Type' => 'text/html' }, ['Not found generated html. Please run `rake graphdoc:generate`']]
+      end
     end
 
     def serve_static_file(env)

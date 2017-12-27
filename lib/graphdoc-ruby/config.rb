@@ -4,38 +4,83 @@ require 'bundler'
 
 module GraphdocRuby
   class Config
-    attr_accessor :endpoint
+    class InvalidConfiguration < StandardError; end
+
+    # Required: <String>
+    # GraphQL endpoint url or dumped schema.json path.
+    attr_reader :endpoint
+
+    # Optional: <String>
+    # Executable path of `graphdoc`.
+    # (default: `Bundler.which('graphdoc')`)
     attr_accessor :executable_path
-    attr_accessor :output_directory
+
+    # Optional: <String>
+    # Output path for `graphdoc`. If you disabled run_time_generation, this value is required.
+    # (default: `File.join(Dir.mktmpdir, 'graphdoc')`)
+    attr_reader :output_directory
+
+    # Optional: <Boolean>
+    # Overwrite directory if output_directory exist.
+    # (default: true)
     attr_accessor :overwrite
-    attr_accessor :precompile
-    attr_accessor :mtime
+
+    # Optional: <Boolean>
+    # Generate html with graphdoc on the first access.
+    # (default: true)
+    attr_accessor :run_time_generation
+
+    # Optional: <String>
+    # Schema name of your graphql-ruby. It is necessary when generating schema.json.
+    attr_accessor :schema_name
+
+    # Optional: <Hash>
+    # Context of your graphql-ruby. It is necessary when generating schema.json.
+    attr_accessor :graphql_context
+
+    # no doc
+    attr_reader :mtime
 
     def initialize
       self.endpoint = nil
       self.executable_path = Bundler.which('graphdoc')
       self.output_directory = default_output_directory
-      self.overwrite = false
-      self.precompile = default_precompile
-      self.mtime = Time.now
+      self.overwrite = true
+      self.run_time_generation = true
+      self.schema_name = nil
+      self.graphql_context = {}
+
+      @use_temporary_output_directory = true
+      @mtime = Time.now
+    end
+
+    def endpoint=(value)
+      @endpoint = value.to_s
+    end
+
+    def output_directory=(value)
+      @output_directory = value.to_s
+      @use_temporary_output_directory = false
+    end
+
+    def assert_configuration!
+      unless endpoint
+        raise InvalidConfiguration, "(endpoint: '#{endpoint}') must be GraphQL endpoint url or dumped schema.json path."
+      end
+
+      if @use_temporary_output_directory && !run_time_generation
+        raise InvalidConfiguration, 'If you disabled run_time_generation, static `output_directory` must be set.'
+      end
+
+      unless File.executable?(executable_path)
+        raise InvalidConfiguration, '`graphdoc` not found. Please install graphdoc (npm install -g @2fd/graphdoc)'
+      end
     end
 
     private
 
     def default_output_directory
-      if defined?(::Rails) && ::Rails.application.respond_to?(:paths)
-        File.join(::Rails.application.paths['tmp'].first, 'graphdoc')
-      else
-        File.join(Dir.mktmpdir, 'graphdoc')
-      end
-    end
-
-    def default_precompile
-      if defined?(::Rails) && ::Rails.respond_to?(:env)
-        ::Rails.env.production?
-      else
-        false
-      end
+      File.join(Dir.mktmpdir, 'graphdoc')
     end
   end
 end

@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
 module GraphdocRuby
   class Railtie < Rails::Railtie
-    config.after_initialize do
-      next unless GraphdocRuby.config.precompile
-      GraphdocRuby::Application.graphdoc.generate_document!
+    rake_tasks do
+      require 'graphdoc-ruby/rake_task'
+
+      GraphdocRuby::RakeTask.new
     end
   end
 end
