@@ -1,6 +1,6 @@
 # Graphdoc::Ruby
 
-Mountable [graphdoc](https://github.com/2fd/graphdoc) based on rake.
+Mountable [graphdoc](https://github.com/2fd/graphdoc) based on rack.
 graphdoc is static page generator for documenting GraphQL Schema.
 
 <img width="1169" alt="screen" src="https://user-images.githubusercontent.com/1688137/34389782-11c80450-eb7f-11e7-8b83-fdfbcbfa711e.png">
@@ -25,7 +25,7 @@ $ yarn add @2fd/graphdoc
 
 ## Usage
 
-### In pure rake application
+### In pure rack application
 
 ```ruby
 # config.ru
