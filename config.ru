@@ -25,5 +25,11 @@ end
 endpoint = 'https://graphql-pokemon.now.sh/'
 directory = '/tmp/directory'
 
+GraphdocRuby.configure do |config|
+  config.endpoint = endpoint
+  config.output_directory = directory
+  config.overwrite = true
+end
+
 use(Reloader)
-run(GraphdocRuby::Application.new(endpoint: endpoint, force: true, timeout: 10))
+run(GraphdocRuby::Application)
