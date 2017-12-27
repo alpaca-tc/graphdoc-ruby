@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'fileutils'
 
 module GraphdocRuby
@@ -31,7 +33,7 @@ module GraphdocRuby
 
     def schema
       @schema ||= Object.const_get(@schema_name.to_s)
-    rescue
+    rescue StandardError
       raise GraphdocRuby::Config::InvalidConfiguration, "(schema_name: #{@schema_name}) must be GraphQL Schema"
     end
   end

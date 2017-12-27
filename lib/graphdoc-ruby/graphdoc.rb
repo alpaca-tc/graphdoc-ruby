@@ -3,6 +3,7 @@
 require 'open3'
 module GraphdocRuby
   class Graphdoc
+    # rubocop:disable all
     def initialize(output:, endpoint:, overwrite:, executable:, mtime:, query: {}, context: {})
       @endpoint = endpoint
       @executable = executable
@@ -25,6 +26,7 @@ module GraphdocRuby
         end
       end
     end
+    # rubocop:enable all
 
     def generate_document!
       return if generated?

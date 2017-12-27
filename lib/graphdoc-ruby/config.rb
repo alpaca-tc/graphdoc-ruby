@@ -72,12 +72,12 @@ module GraphdocRuby
     end
 
     def evaluate_graphql_context
-      hash = self.graphql_context.call
+      hash = graphql_context.call
       hash if hash.is_a?(Hash)
     end
 
     def evaluate_graphql_query
-      hash = self.graphql_query.call
+      hash = graphql_query.call
       hash if hash.is_a?(Hash)
     end
 

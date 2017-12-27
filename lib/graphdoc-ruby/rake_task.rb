@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'graphdoc-ruby'
 
 module GraphdocRuby
@@ -8,16 +10,17 @@ module GraphdocRuby
     # or assigning attributes inside the block
     def initialize
       dependencies = if defined?(::Rails)
-        [:environment]
-      else
-        []
-      end
+                       [:environment]
+                     else
+                       []
+                     end
 
       define_tasks(dependencies)
     end
 
     private
 
+    # rubocop:disable all
     def define_tasks(dependencies)
       namespace :graphdoc do
         desc 'Dump GraphQL schema to endpoint'
@@ -37,5 +40,6 @@ module GraphdocRuby
         end
       end
     end
+    # rubocop:enable all
   end
 end
