@@ -1,4 +1,6 @@
-require "graphdoc/ruby/version"
+# frozen_string_literal: true
+
+require 'graphdoc/ruby/version'
 
 module Graphdoc
   module Ruby
