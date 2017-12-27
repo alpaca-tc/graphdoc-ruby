@@ -3,10 +3,12 @@ require 'fileutils'
 module GraphdocRuby
   class GraphqlJson
     def self.write_schema_json
+      context = GraphdocRuby.config.evaluate_graphql_context || {}
+
       new(
         GraphdocRuby.config.schema_name,
         GraphdocRuby.config.endpoint,
-        GraphdocRuby.config.graphql_context
+        context
       ).write_json
     end
 

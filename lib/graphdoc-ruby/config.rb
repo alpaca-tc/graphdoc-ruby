@@ -16,12 +16,12 @@ module GraphdocRuby
     attr_accessor :executable_path
 
     # Optional: <String>
-    # Output path for `graphdoc`. If you disabled run_time_generation, this value is required.
+    # Output path for `graphdoc`. If you disabled run_time_generation, this value must be customized.
     # (default: `File.join(Dir.mktmpdir, 'graphdoc')`)
     attr_reader :output_directory
 
     # Optional: <Boolean>
-    # Overwrite directory if output_directory exist.
+    # Overwrite files if generated html already exist.
     # (default: true)
     attr_accessor :overwrite
 
@@ -30,13 +30,20 @@ module GraphdocRuby
     # (default: true)
     attr_accessor :run_time_generation
 
+    # Optional: <Proc>
+    # Context of your graphql.
+    # (default: -> {})
+    attr_accessor :graphql_context
+
+    # Optional: <Proc>
+    # Query of your graphql.
+    # (default: -> {})
+    attr_accessor :graphql_query
+
     # Optional: <String>
     # Schema name of your graphql-ruby. It is necessary when generating schema.json.
+    # (default: nil)
     attr_accessor :schema_name
-
-    # Optional: <Hash>
-    # Context of your graphql-ruby. It is necessary when generating schema.json.
-    attr_accessor :graphql_context
 
     # no doc
     attr_reader :mtime
@@ -48,7 +55,8 @@ module GraphdocRuby
       self.overwrite = true
       self.run_time_generation = true
       self.schema_name = nil
-      self.graphql_context = {}
+      self.graphql_context = -> {}
+      self.graphql_query = -> {}
 
       @use_temporary_output_directory = true
       @mtime = Time.now
@@ -61,6 +69,16 @@ module GraphdocRuby
     def output_directory=(value)
       @output_directory = value.to_s
       @use_temporary_output_directory = false
+    end
+
+    def evaluate_graphql_context
+      hash = self.graphql_context.call
+      hash if hash.is_a?(Hash)
+    end
+
+    def evaluate_graphql_query
+      hash = self.graphql_query.call
+      hash if hash.is_a?(Hash)
     end
 
     def assert_configuration!

@@ -3,7 +3,7 @@
 require 'open3'
 module GraphdocRuby
   class Graphdoc
-    def initialize(output:, endpoint:, overwrite:, executable:, mtime:)
+    def initialize(output:, endpoint:, overwrite:, executable:, mtime:, query: {}, context: {})
       @endpoint = endpoint
       @executable = executable
       @overwrite = overwrite
@@ -12,6 +12,18 @@ module GraphdocRuby
       @output_html = File.join(output, 'index.html')
       @options = ['--output', output]
       @options += ['--force'] if overwrite
+
+      if query && !query.empty?
+        query.each do |key_value|
+          @options += ['--query', key_value.join('=')]
+        end
+      end
+
+      if context && !context.empty?
+        context.each do |key_value|
+          @options += ['--header', key_value.join(': ')]
+        end
+      end
     end
 
     def generate_document!

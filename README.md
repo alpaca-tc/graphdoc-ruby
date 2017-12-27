@@ -1,8 +1,7 @@
 # Graphdoc::Ruby
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/graphdoc/ruby`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Mountable [graphdoc](https://github.com/2fd/graphdoc) based on rake.
+graphdoc is static page generator for documenting GraphQL Schema.
 
 ## Installation
 
@@ -12,27 +11,189 @@ Add this line to your application's Gemfile:
 gem 'graphdoc-ruby'
 ```
 
-And then execute:
+Install graphdoc to your machine:
 
-    $ bundle
+```sh
+$ npm install -g @2fd/graphdoc
 
-Or install it yourself as:
+OR
 
-    $ gem install graphdoc-ruby
+$ yarn add @2fd/graphdoc
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+### In pure rake application
 
-## Development
+```ruby
+# config.ru
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+require 'graphdoc_ruby'
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+GraphdocRuby.configure do |config|
+  # endpoint of GraphQL
+  config.endpoint = 'https://graphql-pokemon.now.sh/'
+end
+
+run(GraphdocRuby::Application)
+```
+
+```sh
+$ gem install rack
+$ bundle exec rackup
+```
+
+### In rails application
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  mount GraphdocRuby::Application, at: 'graphdoc'
+end
+
+# config/initializers/graphdoc.rb
+GraphdocRuby.configure do |config|
+  config.endpoint = 'https://graphql-pokemon.now.sh/'
+end
+```
+
+```sh
+$ bundle exec rails server --port 3000
+$ open http://0.0.0.0:3000/graphdoc
+```
+
+## Configuration
+
+```ruby
+GraphdocRuby.configure do |config|
+  # :endpoint
+  #
+  # Required: <String>
+  # GraphQL endpoint url or dumped schema.json path.
+  # 
+  # Example
+  #   config.endpoint = 'https://your-application.com/graphql'
+  #   config.endpoint = Rails.root.join('tmp', 'graphql', 'schema.json')
+
+  # :executable_path
+  #
+  # Optional: <String>
+  # Executable path of `graphdoc`.
+  # (default: `Bundler.which('graphdoc')`)
+  #
+  # Example
+  #   config.executable_path = Rails.root.join('node_modules', '.bin', 'graphdoc')
+
+  # :output_directory
+  #
+  # Optional: <String>
+  # Output path for `graphdoc`. If you disabled run_time_generation, this value must be customized.
+  # NOTE: Do not assign private directory because output_directory folders are served via rack application.
+  # (default: `File.join(Dir.mktmpdir, 'graphdoc')`)
+  #
+  # Example
+  #   config.output_directory = Rails.root.join('tmp', 'graphdoc')
+
+  # :overwrite
+  # Optional: <Boolean>
+  # Overwrite files if generated html already exist.
+  # (default: true)
+  #
+  # Example
+  #   config.overwrite = false
+
+  # :run_time_generation
+  # Optional: <Boolean>
+  # Generate html with graphdoc on the first access.
+  # (default: true)
+  # 
+  # Example
+  #   config.run_time_generation = Rails.env.development?
+
+  # :graphql_context
+  #
+  # Optional: <Proc>
+  # Context of your graphql.
+  # (default: -> {})
+  #   config.graphql_context = -> { { 'Authorization' => "Token #{ENV['GITHUB_ACCESS_TOKEN']}", 'User-Agent' => 'graphdoc-client' } }
+
+  # :graphql_query
+  #
+  # Optional: <Proc>
+  # Query of your graphql.
+  # (default: -> {})
+  #   config.graphql_query = -> { { 'token' => ENV['SECRET_API_TOKEN'] } }
+
+  # ===
+  # Integrated with [graphql-ruby](https://github.com/rmosolgo/graphql-ruby)
+  # ===
+  #
+  # :schema_name
+  #
+  # Optional: <String>
+  # Schema name of your graphql-ruby. It is necessary when generating schema.json.
+  # (default: nil)
+  #
+  # Example
+  #   config.schema_name = 'MyApplicationSchema'
+end
+```
+
+### Example Configuration
+
+#### Github
+
+```ruby
+GraphdocRuby.configure do |config|
+  # Github
+  config.endpoint = 'https://api.github.com/graphql'
+
+  config.graphql_context = -> {
+    {
+      'Authorization' => "bearer #{ENV['GITHUB_ACCESS_TOKEN']}",
+      'User-Agent' => 'my-client',
+    }
+  }
+end
+```
+
+#### Your Rails product
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  namespace :admin do
+    mount GraphdocRuby::Application, at: 'graphdoc'
+  end
+end
+
+# config/initializers/graphdoc.rb
+GraphdocRuby.configure do |config|
+  config.endpoint = Rails.root.join('tmp', 'graphql', 'schema.json')
+  config.output_directory = Rails.root.join('tmp', 'graphdoc').to_s
+  config.schema_name = 'MyApplicationSchema'
+  config.run_time_generation = Rails.env.development?
+end
+
+# Capfile
+namespace :deploy do
+  after :generate_graphdoc do
+    within release_path do
+      # Generate schema.json from MyApplicationSchema
+      execute :rake, 'graphdoc:dump_schema'
+
+      # Generate html with graphdoc from schema.json
+      execute :rake, 'graphdoc:generate'
+    end
+  end
+
+  after :publishing, :generate_graphdoc
+end
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/graphdoc-ruby.
+Bug reports and pull requests are welcome on GitHub at https://github.com/alpaca-tc/graphdoc-ruby.
 
 ## License
 

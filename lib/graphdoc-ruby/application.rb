@@ -20,7 +20,9 @@ module GraphdocRuby
         executable: config.executable_path,
         endpoint: config.endpoint,
         overwrite: config.overwrite,
-        mtime: config.mtime
+        mtime: config.mtime,
+        query: config.evaluate_graphql_query,
+        context: config.evaluate_graphql_context
       )
     end
 
